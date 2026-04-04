@@ -1,86 +1,93 @@
 -- GUI BASE
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = game.CoreGui
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 
-local Frame = Instance.new("Frame")
-Frame.Parent = ScreenGui
-Frame.Size = UDim2.new(0, 250, 0, 350)
-Frame.Position = UDim2.new(0, 50, 0, 50)
-Frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
-Frame.Active = true
-Frame.Draggable = true
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 260, 0, 360)
+Main.Position = UDim2.new(0.05, 0, 0.1, 0)
+Main.BackgroundColor3 = Color3.fromRGB(20,20,20)
+Main.BorderSizePixel = 0
+Main.Active = true
+Main.Draggable = true
+
+-- TITLE
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1,0,0,40)
+Title.Text = "Painel Script"
+Title.BackgroundColor3 = Color3.fromRGB(30,30,30)
+Title.TextColor3 = Color3.new(1,1,1)
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 20
 
 -- SCROLL
-local Scroll = Instance.new("ScrollingFrame")
-Scroll.Parent = Frame
-Scroll.Size = UDim2.new(1,0,1,0)
-Scroll.CanvasSize = UDim2.new(0,0,0,600) -- aumenta aqui pra caber tudo
-Scroll.ScrollBarThickness = 6
+local Scroll = Instance.new("ScrollingFrame", Main)
+Scroll.Position = UDim2.new(0,0,0,40)
+Scroll.Size = UDim2.new(1,0,1,-40)
+Scroll.CanvasSize = UDim2.new(0,0,0,600)
+Scroll.ScrollBarThickness = 5
 Scroll.BackgroundTransparency = 1
 
-local UIList = Instance.new("UIListLayout")
-UIList.Parent = Scroll
-UIList.Padding = UDim.new(0,5)
+local Layout = Instance.new("UIListLayout", Scroll)
+Layout.Padding = UDim.new(0,6)
 
--- FUNÇÃO BOTÃO
-function criarBotao(nome, callback)
-    local Botao = Instance.new("TextButton")
-    Botao.Parent = Scroll
-    Botao.Size = UDim2.new(1,-10,0,40)
-    Botao.Text = nome
-    Botao.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    Botao.TextColor3 = Color3.new(1,1,1)
+-- FUNÇÕES
+function criarBotao(texto, callback)
+    local btn = Instance.new("TextButton", Scroll)
+    btn.Size = UDim2.new(1,-10,0,40)
+    btn.Text = texto
+    btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 16
     
-    Botao.MouseButton1Click:Connect(callback)
+    btn.MouseButton1Click:Connect(callback)
 end
 
--- FUNÇÃO INPUT
 function criarInput(placeholder)
-    local Box = Instance.new("TextBox")
-    Box.Parent = Scroll
-    Box.Size = UDim2.new(1,-10,0,40)
-    Box.PlaceholderText = placeholder
-    Box.Text = ""
-    Box.BackgroundColor3 = Color3.fromRGB(40,40,40)
-    Box.TextColor3 = Color3.new(1,1,1)
-    return Box
+    local box = Instance.new("TextBox", Scroll)
+    box.Size = UDim2.new(1,-10,0,40)
+    box.PlaceholderText = placeholder
+    box.Text = ""
+    box.BackgroundColor3 = Color3.fromRGB(35,35,35)
+    box.TextColor3 = Color3.new(1,1,1)
+    box.Font = Enum.Font.SourceSans
+    box.TextSize = 16
+    return box
 end
 
 -- PLAYER
 local player = game.Players.LocalPlayer
 
 -- SPEED
-local speedBox = criarInput("Digite a Speed")
+local speedBox = criarInput("Speed")
 
-criarBotao("Ativar Speed", function()
-    local speed = tonumber(speedBox.Text)
-    if speed then
-        player.Character.Humanoid.WalkSpeed = speed
+criarBotao("Aplicar Speed", function()
+    local val = tonumber(speedBox.Text)
+    if val then
+        player.Character.Humanoid.WalkSpeed = val
     end
 end)
 
 -- FLY
-local flySpeedBox = criarInput("Velocidade do Fly")
-
+local flySpeedBox = criarInput("Fly Speed")
 local flying = false
 local bv, bg
 
 criarBotao("Fly ON/OFF", function()
     flying = not flying
-    
+
+    local char = player.Character
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+
     if flying then
-        local char = player.Character
-        local hrp = char:WaitForChild("HumanoidRootPart")
-        
         bv = Instance.new("BodyVelocity", hrp)
         bg = Instance.new("BodyGyro", hrp)
-        
-        bv.MaxForce = Vector3.new(999999,999999,999999)
-        bg.MaxTorque = Vector3.new(999999,999999,999999)
-        
+
+        bv.MaxForce = Vector3.new(9e9,9e9,9e9)
+        bg.MaxTorque = Vector3.new(9e9,9e9,9e9)
+
         game:GetService("RunService").RenderStepped:Connect(function()
             if flying then
-                local speed = tonumber(flySpeedBox.Text) or 50
+                local speed = tonumber(flySpeedBox.Text) or 60
                 bv.Velocity = workspace.CurrentCamera.CFrame.LookVector * speed
                 bg.CFrame = workspace.CurrentCamera.CFrame
             end
@@ -91,25 +98,48 @@ criarBotao("Fly ON/OFF", function()
     end
 end)
 
--- MAGNET (V2 FIXADO)
+-- NOCLIP
+local noclip = false
+
+criarBotao("Noclip ON/OFF", function()
+    noclip = not noclip
+
+    game:GetService("RunService").Stepped:Connect(function()
+        if noclip and player.Character then
+            for _,v in pairs(player.Character:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.CanCollide = false
+                end
+            end
+        end
+    end)
+end)
+
+-- MAGNET (VERSÃO MAIS ESTÁVEL)
 local magnet = false
 
 criarBotao("Magnet ON/OFF", function()
     magnet = not magnet
-    
+
     while magnet do
-        wait(0.1)
-        for _,v in pairs(workspace:GetDescendants()) do
-            if v:IsA("BasePart") and v.Name == "Handle" then
-                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                    v.CFrame = player.Character.HumanoidRootPart.CFrame
+        task.wait(0.1)
+
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local hrp = char.HumanoidRootPart
+
+            for _,obj in pairs(workspace:GetDescendants()) do
+                if obj:IsA("BasePart") and not obj.Anchored then
+                    if (obj.Position - hrp.Position).Magnitude < 50 then
+                        obj.CFrame = hrp.CFrame
+                    end
                 end
             end
         end
     end
 end)
 
--- ATUALIZA SCROLL AUTOMATICO
-UIList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    Scroll.CanvasSize = UDim2.new(0,0,0,UIList.AbsoluteContentSize.Y + 10)
+-- AJUSTE AUTOMATICO DO SCROLL
+Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    Scroll.CanvasSize = UDim2.new(0,0,0,Layout.AbsoluteContentSize.Y + 10)
 end)
