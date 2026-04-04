@@ -1,145 +1,213 @@
--- GUI BASE
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-
-local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0, 260, 0, 360)
-Main.Position = UDim2.new(0.05, 0, 0.1, 0)
-Main.BackgroundColor3 = Color3.fromRGB(20,20,20)
-Main.BorderSizePixel = 0
-Main.Active = true
-Main.Draggable = true
-
--- TITLE
-local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1,0,0,40)
-Title.Text = "Painel Script"
-Title.BackgroundColor3 = Color3.fromRGB(30,30,30)
-Title.TextColor3 = Color3.new(1,1,1)
-Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 20
-
--- SCROLL
-local Scroll = Instance.new("ScrollingFrame", Main)
-Scroll.Position = UDim2.new(0,0,0,40)
-Scroll.Size = UDim2.new(1,0,1,-40)
-Scroll.CanvasSize = UDim2.new(0,0,0,600)
-Scroll.ScrollBarThickness = 5
-Scroll.BackgroundTransparency = 1
-
-local Layout = Instance.new("UIListLayout", Scroll)
-Layout.Padding = UDim.new(0,6)
-
--- FUNÇÕES
-function criarBotao(texto, callback)
-    local btn = Instance.new("TextButton", Scroll)
-    btn.Size = UDim2.new(1,-10,0,40)
-    btn.Text = texto
-    btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 16
-    
-    btn.MouseButton1Click:Connect(callback)
-end
-
-function criarInput(placeholder)
-    local box = Instance.new("TextBox", Scroll)
-    box.Size = UDim2.new(1,-10,0,40)
-    box.PlaceholderText = placeholder
-    box.Text = ""
-    box.BackgroundColor3 = Color3.fromRGB(35,35,35)
-    box.TextColor3 = Color3.new(1,1,1)
-    box.Font = Enum.Font.SourceSans
-    box.TextSize = 16
-    return box
-end
-
--- PLAYER
+-- GUI
 local player = game.Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
--- SPEED
-local speedBox = criarInput("Speed")
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+local humanoid = char:WaitForChild("Humanoid")
 
-criarBotao("Aplicar Speed", function()
-    local val = tonumber(speedBox.Text)
-    if val then
-        player.Character.Humanoid.WalkSpeed = val
-    end
+-- ScreenGui
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "SouzaHubV3"
+
+-- Main Frame
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0,220,0,320)
+main.Position = UDim2.new(0.1,0,0.2,0)
+main.BackgroundColor3 = Color3.fromRGB(20,20,20)
+main.BorderSizePixel = 0
+
+-- Title
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1,0,0,40)
+title.Text = "🔥 Souza Hub V3"
+title.BackgroundColor3 = Color3.fromRGB(15,15,15)
+title.TextColor3 = Color3.new(1,1,1)
+title.BorderSizePixel = 0
+
+-- Scroll
+local scroll = Instance.new("ScrollingFrame", main)
+scroll.Size = UDim2.new(1,0,1,-40)
+scroll.Position = UDim2.new(0,0,0,40)
+scroll.CanvasSize = UDim2.new(0,0,0,600)
+scroll.ScrollBarThickness = 4
+scroll.BackgroundTransparency = 1
+
+local layout = Instance.new("UIListLayout", scroll)
+layout.Padding = UDim.new(0,5)
+
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+end)
+
+-- DRAG
+local dragging, dragInput, startPos, startFramePos
+
+title.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		startPos = input.Position
+		startFramePos = main.Position
+	end
+end)
+
+UIS.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then
+		dragInput = input
+	end
+end)
+
+UIS.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	if dragging and dragInput then
+		local delta = dragInput.Position - startPos
+		main.Position = UDim2.new(
+			startFramePos.X.Scale,
+			startFramePos.X.Offset + delta.X,
+			startFramePos.Y.Scale,
+			startFramePos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+-- MINIMIZAR
+local minimized = false
+
+local minBtn = Instance.new("TextButton", main)
+minBtn.Size = UDim2.new(0,30,0,30)
+minBtn.Position = UDim2.new(1,-35,0,5)
+minBtn.Text = "-"
+minBtn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+minBtn.TextColor3 = Color3.new(1,1,1)
+
+minBtn.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	
+	if minimized then
+		scroll.Visible = false
+		main.Size = UDim2.new(0,220,0,40)
+		minBtn.Text = "+"
+	else
+		scroll.Visible = true
+		main.Size = UDim2.new(0,220,0,320)
+		minBtn.Text = "-"
+	end
+end)
+
+-- BUTTON
+local function createButton(name, callback)
+	local btn = Instance.new("TextButton", scroll)
+	btn.Size = UDim2.new(1,-10,0,35)
+	btn.Text = name
+	btn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.BorderSizePixel = 0
+	
+	btn.MouseButton1Click:Connect(callback)
+end
+
+-- INPUT
+local function createInput(placeholder, callback)
+	local box = Instance.new("TextBox", scroll)
+	box.Size = UDim2.new(1,-10,0,35)
+	box.PlaceholderText = placeholder
+	box.Text = ""
+	box.BackgroundColor3 = Color3.fromRGB(25,25,25)
+	box.TextColor3 = Color3.new(1,1,1)
+	box.BorderSizePixel = 0
+	
+	box.FocusLost:Connect(function(enter)
+		if enter then
+			local num = tonumber(box.Text)
+			if num then
+				callback(num)
+			end
+		end
+	end)
+end
+
+-- ====================
+-- FUNÇÕES
+-- ====================
+
+-- MAGNET (VERSÃO BOA)
+local magnet = false
+
+createButton("🧲 Magnet", function()
+	magnet = not magnet
+	
+	while magnet do
+		task.wait()
+
+		if hrp then
+			for _,v in pairs(workspace:GetDescendants()) do
+				if v:IsA("BasePart") and not v.Anchored then
+					if (v.Position - hrp.Position).Magnitude <= 30 then
+						v.CFrame = hrp.CFrame
+					end
+				end
+			end
+		end
+	end
 end)
 
 -- FLY
-local flySpeedBox = criarInput("Fly Speed")
 local flying = false
+local speed = 50
 local bv, bg
 
-criarBotao("Fly ON/OFF", function()
-    flying = not flying
+local function startFly()
+	humanoid:ChangeState(Enum.HumanoidStateType.Physics)
 
-    local char = player.Character
-    local hrp = char:FindFirstChild("HumanoidRootPart")
+	bv = Instance.new("BodyVelocity", hrp)
+	bv.MaxForce = Vector3.new(1e5,1e5,1e5)
 
-    if flying then
-        bv = Instance.new("BodyVelocity", hrp)
-        bg = Instance.new("BodyGyro", hrp)
+	bg = Instance.new("BodyGyro", hrp)
+	bg.MaxTorque = Vector3.new(1e5,1e5,1e5)
+end
 
-        bv.MaxForce = Vector3.new(9e9,9e9,9e9)
-        bg.MaxTorque = Vector3.new(9e9,9e9,9e9)
+local function stopFly()
+	if bv then bv:Destroy() end
+	if bg then bg:Destroy() end
+	humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+end
 
-        game:GetService("RunService").RenderStepped:Connect(function()
-            if flying then
-                local speed = tonumber(flySpeedBox.Text) or 60
-                bv.Velocity = workspace.CurrentCamera.CFrame.LookVector * speed
-                bg.CFrame = workspace.CurrentCamera.CFrame
-            end
-        end)
-    else
-        if bv then bv:Destroy() end
-        if bg then bg:Destroy() end
-    end
+createButton("🕊️ Fly", function()
+	flying = not flying
+	if flying then startFly() else stopFly() end
 end)
 
--- NOCLIP
-local noclip = false
+RunService.RenderStepped:Connect(function()
+	if flying and bv and bg then
+		local cam = workspace.CurrentCamera
+		local dir = Vector3.zero
 
-criarBotao("Noclip ON/OFF", function()
-    noclip = not noclip
+		if UIS:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
+		if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
+		if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
+		if UIS:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
 
-    game:GetService("RunService").Stepped:Connect(function()
-        if noclip and player.Character then
-            for _,v in pairs(player.Character:GetDescendants()) do
-                if v:IsA("BasePart") then
-                    v.CanCollide = false
-                end
-            end
-        end
-    end)
+		if dir.Magnitude > 0 then
+			bv.Velocity = dir.Unit * speed
+		else
+			bv.Velocity = Vector3.zero
+		end
+
+		bg.CFrame = cam.CFrame
+	end
 end)
 
--- MAGNET (VERSÃO MAIS ESTÁVEL)
-local magnet = false
-
-criarBotao("Magnet ON/OFF", function()
-    magnet = not magnet
-
-    while magnet do
-        task.wait(0.1)
-
-        local char = player.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            local hrp = char.HumanoidRootPart
-
-            for _,obj in pairs(workspace:GetDescendants()) do
-                if obj:IsA("BasePart") and not obj.Anchored then
-                    if (obj.Position - hrp.Position).Magnitude < 50 then
-                        obj.CFrame = hrp.CFrame
-                    end
-                end
-            end
-        end
-    end
+-- INPUTS
+createInput("WalkSpeed (ex: 100)", function(val)
+	humanoid.WalkSpeed = val
 end)
 
--- AJUSTE AUTOMATICO DO SCROLL
-Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    Scroll.CanvasSize = UDim2.new(0,0,0,Layout.AbsoluteContentSize.Y + 10)
+createInput("Fly Speed (ex: 80)", function(val)
+	speed = val
 end)
