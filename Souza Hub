@@ -1,0 +1,254 @@
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
+
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+-- ===== CONFIG =====
+local flying = false
+local speed = 50
+local magnetOn = false
+
+local bodyVelocity, bodyGyro
+local point1, point2 = nil, nil
+
+-- ===== GUI =====
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+gui.Name = "SouzaHubV3"
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 240, 0, 380)
+frame.Position = UDim2.new(0, 40, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(15,15,15)
+
+-- HEADER
+local header = Instance.new("Frame", frame)
+header.Size = UDim2.new(1,0,0,35)
+header.BackgroundColor3 = Color3.fromRGB(30,0,50)
+
+local title = Instance.new("TextLabel", header)
+title.Size = UDim2.new(1,-40,1,0)
+title.Position = UDim2.new(0,10,0,0)
+title.Text = "SOUZA HUB V3"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 14
+title.BackgroundTransparency = 1
+
+-- RGB EFFECT
+task.spawn(function()
+	while true do
+		for i = 0,1,0.01 do
+			title.TextColor3 = Color3.fromHSV(i,1,1)
+			task.wait(0.05)
+		end
+	end
+end)
+
+-- MINIMIZE
+local minimize = Instance.new("TextButton", header)
+minimize.Size = UDim2.new(0,30,1,0)
+minimize.Position = UDim2.new(1,-30,0,0)
+minimize.Text = "-"
+minimize.BackgroundColor3 = Color3.fromRGB(60,0,80)
+
+-- SCROLL AREA (FIX IMPORTANTE)
+local scroll = Instance.new("ScrollingFrame", frame)
+scroll.Position = UDim2.new(0,0,0,35)
+scroll.Size = UDim2.new(1,0,1,-35)
+scroll.CanvasSize = UDim2.new(0,0,0,0)
+scroll.ScrollBarThickness = 4
+scroll.BackgroundTransparency = 1
+
+local layout = Instance.new("UIListLayout", scroll)
+layout.Padding = UDim.new(0,5)
+
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+end)
+
+-- DRAG
+local dragging, dragInput, dragStart, startPos
+
+header.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = frame.Position
+		
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+header.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then
+		dragInput = input
+	end
+end)
+
+UIS.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - dragStart
+		frame.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+-- CTRL ESCONDER
+UIS.InputBegan:Connect(function(input, gp)
+	if gp then return end
+	if input.KeyCode == Enum.KeyCode.LeftControl then
+		frame.Visible = not frame.Visible
+	end
+end)
+
+-- BOTÃO FLUTUANTE
+local openBtn = Instance.new("TextButton", gui)
+openBtn.Size = UDim2.new(0,40,0,40)
+openBtn.Position = UDim2.new(0,10,0.5,0)
+openBtn.Text = "≡"
+openBtn.Visible = false
+openBtn.BackgroundColor3 = Color3.fromRGB(60,0,80)
+
+minimize.MouseButton1Click:Connect(function()
+	frame.Visible = false
+	openBtn.Visible = true
+end)
+
+openBtn.MouseButton1Click:Connect(function()
+	frame.Visible = true
+	openBtn.Visible = false
+end)
+
+-- BOTÕES
+local function createButton(text, callback)
+	local btn = Instance.new("TextButton", scroll)
+	btn.Size = UDim2.new(1,-10,0,35)
+	btn.Text = text
+	btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.BorderSizePixel = 0
+	
+	btn.MouseButton1Click:Connect(callback)
+end
+
+-- FUNÇÕES
+local function startFly()
+	flying = true
+	bodyVelocity = Instance.new("BodyVelocity", hrp)
+	bodyVelocity.MaxForce = Vector3.new(1e5,1e5,1e5)
+	
+	bodyGyro = Instance.new("BodyGyro", hrp)
+	bodyGyro.MaxTorque = Vector3.new(1e5,1e5,1e5)
+end
+
+local function stopFly()
+	flying = false
+	if bodyVelocity then bodyVelocity:Destroy() end
+	if bodyGyro then bodyGyro:Destroy() end
+end
+
+local fixed, welds = {}, {}
+
+local function toggleMagnet()
+	magnetOn = not magnetOn
+	
+	if not magnetOn then
+		for _, w in pairs(welds) do
+			if w then w:Destroy() end
+		end
+		table.clear(fixed)
+		table.clear(welds)
+	end
+end
+
+-- BOTÕES MENU
+createButton("✈️ Fly ON/OFF", function()
+	if flying then stopFly() else startFly() end
+end)
+
+createButton("🚀 Fly +Speed", function()
+	speed += 20
+end)
+
+createButton("🐢 Fly -Speed", function()
+	speed = math.max(10, speed - 20)
+end)
+
+createButton("🧲 Magnet", toggleMagnet)
+
+createButton("📍 Save P1", function()
+	point1 = hrp.CFrame
+end)
+
+createButton("📍 Save P2", function()
+	point2 = hrp.CFrame
+end)
+
+createButton("🚀 TP P1", function()
+	if point1 then hrp.CFrame = point1 + Vector3.new(0,3,0) end
+end)
+
+createButton("🚀 TP P2", function()
+	if point2 then hrp.CFrame = point2 + Vector3.new(0,3,0) end
+end)
+
+createButton("⚡ Speed +", function()
+	humanoid.WalkSpeed += 50
+end)
+
+createButton("🐢 Speed -", function()
+	humanoid.WalkSpeed = math.max(16, humanoid.WalkSpeed - 50)
+end)
+
+-- LOOP FLY
+RunService.RenderStepped:Connect(function()
+	if flying and bodyVelocity and bodyGyro then
+		local cam = workspace.CurrentCamera
+		local dir = Vector3.zero
+		
+		if UIS:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
+		if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
+		if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
+		if UIS:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
+		
+		if dir.Magnitude > 0 then
+			bodyVelocity.Velocity = dir.Unit * speed
+		else
+			bodyVelocity.Velocity = Vector3.zero
+		end
+		
+		bodyGyro.CFrame = cam.CFrame
+	end
+end)
+
+-- LOOP MAGNET
+RunService.Heartbeat:Connect(function()
+	if not magnetOn then return end
+	
+	for _, obj in pairs(workspace:GetPartBoundsInRadius(hrp.Position, 50)) do
+		if obj.Name == "TranspBox" and not obj.Anchored and not fixed[obj] then
+			
+			local dir = (hrp.Position - obj.Position).Unit
+			obj.AssemblyLinearVelocity = dir * 45
+			
+			if (obj.Position - hrp.Position).Magnitude < 4 then
+				local weld = Instance.new("WeldConstraint", obj)
+				weld.Part0 = hrp
+				weld.Part1 = obj
+				
+				fixed[obj] = true
+				welds[obj] = weld
+			end
+		end
+	end
+end)
