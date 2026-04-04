@@ -6,7 +6,7 @@ local humanoid = character:WaitForChild("Humanoid")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
--- ===== CONFIG =====
+-- CONFIG
 local flying = false
 local speed = 50
 local magnetOn = false
@@ -14,7 +14,7 @@ local magnetOn = false
 local bodyVelocity, bodyGyro
 local point1, point2 = nil, nil
 
--- ===== GUI =====
+-- GUI
 local gui = Instance.new("ScreenGui", player.PlayerGui)
 gui.Name = "SouzaHubV3"
 
@@ -36,7 +36,7 @@ title.Font = Enum.Font.GothamBold
 title.TextSize = 14
 title.BackgroundTransparency = 1
 
--- RGB EFFECT
+-- RGB
 task.spawn(function()
 	while true do
 		for i = 0,1,0.01 do
@@ -46,14 +46,14 @@ task.spawn(function()
 	end
 end)
 
--- MINIMIZE
+-- MINIMIZAR
 local minimize = Instance.new("TextButton", header)
 minimize.Size = UDim2.new(0,30,1,0)
 minimize.Position = UDim2.new(1,-30,0,0)
 minimize.Text = "-"
 minimize.BackgroundColor3 = Color3.fromRGB(60,0,80)
 
--- SCROLL AREA (FIX IMPORTANTE)
+-- SCROLL
 local scroll = Instance.new("ScrollingFrame", frame)
 scroll.Position = UDim2.new(0,0,0,35)
 scroll.Size = UDim2.new(1,0,1,-35)
@@ -129,7 +129,7 @@ openBtn.MouseButton1Click:Connect(function()
 	openBtn.Visible = false
 end)
 
--- BOTÕES
+-- BOTÃO
 local function createButton(text, callback)
 	local btn = Instance.new("TextButton", scroll)
 	btn.Size = UDim2.new(1,-10,0,35)
@@ -139,6 +139,26 @@ local function createButton(text, callback)
 	btn.BorderSizePixel = 0
 	
 	btn.MouseButton1Click:Connect(callback)
+end
+
+-- INPUT
+local function createInput(placeholder, callback)
+	local box = Instance.new("TextBox", scroll)
+	box.Size = UDim2.new(1,-10,0,35)
+	box.PlaceholderText = placeholder
+	box.Text = ""
+	box.BackgroundColor3 = Color3.fromRGB(25,25,25)
+	box.TextColor3 = Color3.new(1,1,1)
+	box.BorderSizePixel = 0
+	
+	box.FocusLost:Connect(function(enter)
+		if enter then
+			local num = tonumber(box.Text)
+			if num then
+				callback(num)
+			end
+		end
+	end)
 end
 
 -- FUNÇÕES
@@ -171,17 +191,13 @@ local function toggleMagnet()
 	end
 end
 
--- BOTÕES MENU
+-- MENU
 createButton("✈️ Fly ON/OFF", function()
 	if flying then stopFly() else startFly() end
 end)
 
-createButton("🚀 Fly +Speed", function()
-	speed += 20
-end)
-
-createButton("🐢 Fly -Speed", function()
-	speed = math.max(10, speed - 20)
+createInput("Digite Fly Speed (ex: 80)", function(value)
+	speed = value
 end)
 
 createButton("🧲 Magnet", toggleMagnet)
@@ -202,12 +218,8 @@ createButton("🚀 TP P2", function()
 	if point2 then hrp.CFrame = point2 + Vector3.new(0,3,0) end
 end)
 
-createButton("⚡ Speed +", function()
-	humanoid.WalkSpeed += 50
-end)
-
-createButton("🐢 Speed -", function()
-	humanoid.WalkSpeed = math.max(16, humanoid.WalkSpeed - 50)
+createInput("Digite WalkSpeed (ex: 100)", function(value)
+	humanoid.WalkSpeed = value
 end)
 
 -- LOOP FLY
@@ -236,19 +248,10 @@ RunService.Heartbeat:Connect(function()
 	if not magnetOn then return end
 	
 	for _, obj in pairs(workspace:GetPartBoundsInRadius(hrp.Position, 50)) do
-		if obj.Name == "TranspBox" and not obj.Anchored and not fixed[obj] then
+		if obj.Name == "TranspBox" and not obj.Anchored then
 			
 			local dir = (hrp.Position - obj.Position).Unit
 			obj.AssemblyLinearVelocity = dir * 45
-			
-			if (obj.Position - hrp.Position).Magnitude < 4 then
-				local weld = Instance.new("WeldConstraint", obj)
-				weld.Part0 = hrp
-				weld.Part1 = obj
-				
-				fixed[obj] = true
-				welds[obj] = weld
-			end
 		end
 	end
 end)
