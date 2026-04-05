@@ -1,285 +1,247 @@
--- ================= CONFIG =================
-local KEY_URL = "https://pastebin.com/raw/u07LPtaT" -- ex: raw github
+--// SERVICES
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
-local saveFile = "souza_key.txt"
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
 
--- ================= SERVICES =================
-local plr = game.Players.LocalPlayer
-local uis = game:GetService("UserInputService")
-local run = game:GetService("RunService")
+--// KEY SYSTEM (PASTEBIN)
+local pastebinURL = "https://pastebin.com/raw/u07LPtaT"
+local keyAccepted = false
 
--- ================= FUNÇÕES KEY =================
-local function getKeys()
-	local success, result = pcall(function()
-		return game:HttpGet(KEY_URL)
+local gui = Instance.new("ScreenGui", game.CoreGui)
+
+local keyFrame = Instance.new("Frame", gui)
+keyFrame.Size = UDim2.new(0,300,0,150)
+keyFrame.Position = UDim2.new(0.5,-150,0.5,-75)
+keyFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+
+local keyBox = Instance.new("TextBox", keyFrame)
+keyBox.Size = UDim2.new(0.8,0,0.3,0)
+keyBox.Position = UDim2.new(0.1,0,0.3,0)
+keyBox.PlaceholderText = "Digite sua key..."
+keyBox.Text = ""
+
+local keyBtn = Instance.new("TextButton", keyFrame)
+keyBtn.Size = UDim2.new(0.5,0,0.2,0)
+keyBtn.Position = UDim2.new(0.25,0,0.7,0)
+keyBtn.Text = "Confirmar"
+
+local function checkKey(k)
+	local s, res = pcall(function()
+		return game:HttpGet(pastebinURL)
 	end)
-	
-	if success then
-		return result
-	end
-	
-	return ""
-end
-
-local function checkKey(key, data)
-	for line in string.gmatch(data, "[^\r\n]+") do
-		if line == key then
-			return true
+	if s and res then
+		for line in string.gmatch(res,"[^\r\n]+") do
+			if line == k then
+				return true
+			end
 		end
 	end
 	return false
 end
 
-local function saveKey(key)
-	if writefile then
-		writefile(saveFile, key)
+keyBtn.MouseButton1Click:Connect(function()
+	if checkKey(keyBox.Text) then
+		keyAccepted = true
+		gui:ClearAllChildren()
+	else
+		keyBox.Text = ""
+		keyBox.PlaceholderText = "Key inválida"
 	end
-end
+end)
 
-local function loadKey()
-	if readfile and isfile and isfile(saveFile) then
-		return readfile(saveFile)
-	end
-	return nil
-end
+repeat task.wait() until keyAccepted
 
--- ================= GUI KEY =================
-local gui = Instance.new("ScreenGui", game.CoreGui)
-gui.Name = "SouzaKeySystem"
+--// MAIN GUI
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0,260,0,300)
+main.Position = UDim2.new(0,20,0.3,0)
+main.BackgroundColor3 = Color3.fromRGB(25,25,25)
 
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0,300,0,180)
-frame.Position = UDim2.new(0.4,0,0.35,0)
-frame.BackgroundColor3 = Color3.fromRGB(15,15,15)
-frame.Active = true
-frame.Draggable = true
-
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1,0,0,40)
+-- título RGB
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1,0,0,30)
+title.Text = "Souza Premium"
 title.BackgroundTransparency = 1
-title.Text = "🔐 Souza Premium"
-title.Font = Enum.Font.GothamBold
-title.TextSize = 20
 
 task.spawn(function()
 	while true do
-		for i=0,1,0.01 do
+		for i = 0,1,0.01 do
 			title.TextColor3 = Color3.fromHSV(i,1,1)
 			task.wait()
 		end
 	end
 end)
 
-local box = Instance.new("TextBox", frame)
-box.Size = UDim2.new(1,-20,0,40)
-box.Position = UDim2.new(0,10,0,60)
-box.PlaceholderText = "Digite sua key..."
-box.BackgroundColor3 = Color3.fromRGB(25,25,25)
-box.TextColor3 = Color3.new(1,1,1)
+-- minimizar
+local min = Instance.new("TextButton", main)
+min.Size = UDim2.new(0,30,0,30)
+min.Position = UDim2.new(1,-30,0,0)
+min.Text = "-"
 
-local status = Instance.new("TextLabel", frame)
-status.Size = UDim2.new(1,0,0,20)
-status.Position = UDim2.new(0,0,0,105)
-status.BackgroundTransparency = 1
-status.Font = Enum.Font.Gotham
-
-local btn = Instance.new("TextButton", frame)
-btn.Size = UDim2.new(1,-20,0,40)
-btn.Position = UDim2.new(0,10,0,130)
-btn.Text = "Validar Key"
-btn.BackgroundColor3 = Color3.fromRGB(30,30,30)
-btn.TextColor3 = Color3.new(1,1,1)
-
--- ================= HUB =================
-local function loadHub()
-	gui:Destroy()
-
-	-- ================= HUB GUI =================
-	local gui = Instance.new("ScreenGui", game.CoreGui)
-	local main = Instance.new("Frame", gui)
-	main.Size = UDim2.new(0,250,0,330)
-	main.Position = UDim2.new(0.35,0,0.25,0)
-	main.BackgroundColor3 = Color3.fromRGB(15,15,15)
-	main.Active = true
-	main.Draggable = true
-
-	local title = Instance.new("TextLabel", main)
-	title.Size = UDim2.new(1,0,0,30)
-	title.BackgroundTransparency = 1
-	title.Text = "🔥 Souza Premium"
-	title.Font = Enum.Font.GothamBold
-	title.TextSize = 18
-
-	-- RGB TITLE
-	task.spawn(function()
-		while true do
-			for i=0,1,0.01 do
-				title.TextColor3 = Color3.fromHSV(i,1,1)
-				task.wait()
-			end
+local minimized = false
+min.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	for _,v in pairs(main:GetChildren()) do
+		if v ~= title and v ~= min then
+			v.Visible = not minimized
 		end
-	end)
-
-	local scroll = Instance.new("ScrollingFrame", main)
-	scroll.Size = UDim2.new(1,0,1,-30)
-	scroll.Position = UDim2.new(0,0,0,30)
-	scroll.CanvasSize = UDim2.new(0,0,0,600)
-	scroll.BackgroundTransparency = 1
-
-	local layout = Instance.new("UIListLayout", scroll)
-	layout.Padding = UDim.new(0,6)
-
-	local function createButton(text, func)
-		local btn = Instance.new("TextButton", scroll)
-		btn.Size = UDim2.new(1,-10,0,35)
-		btn.BackgroundColor3 = Color3.fromRGB(30,30,30)
-		btn.TextColor3 = Color3.new(1,1,1)
-		btn.Text = text
-		btn.MouseButton1Click:Connect(func)
 	end
+	main.Size = minimized and UDim2.new(0,260,0,30) or UDim2.new(0,260,0,300)
+end)
 
-	local function createBox(ph)
-		local box = Instance.new("TextBox", scroll)
-		box.Size = UDim2.new(1,-10,0,35)
-		box.PlaceholderText = ph
-		box.BackgroundColor3 = Color3.fromRGB(25,25,25)
-		box.TextColor3 = Color3.new(1,1,1)
-		return box
-	end
+--// VARS
+local flySpeed = 50
+local walkSpeed = 16
+local flying = false
+local noclip = false
+local magnetOn = false
 
-	local walkBox = createBox("WalkSpeed")
-	local flyBox = createBox("FlySpeed")
-
-	-- WALK
-	createButton("Set WalkSpeed", function()
-		local v = tonumber(walkBox.Text)
-		if v then
-			plr.Character.Humanoid.WalkSpeed = v
-		end
-	end)
-
-	-- FLY
-	local flying=false
-	local bv,bg
-	local speed=50
-
-	createButton("Fly", function()
-		flying = not flying
-		local char = plr.Character
-		local hrp = char:WaitForChild("HumanoidRootPart")
-		local hum = char:WaitForChild("Humanoid")
-
-		if flying then
-			hum:ChangeState(Enum.HumanoidStateType.Physics)
-
-			bv = Instance.new("BodyVelocity", hrp)
-			bv.MaxForce = Vector3.new(1e5,1e5,1e5)
-
-			bg = Instance.new("BodyGyro", hrp)
-			bg.MaxTorque = Vector3.new(1e5,1e5,1e5)
-
-			local v = tonumber(flyBox.Text)
-			if v then speed = v end
-		else
-			if bv then bv:Destroy() end
-			if bg then bg:Destroy() end
-		end
-	end)
-
-	run.RenderStepped:Connect(function()
-		if flying and bv then
-			local cam = workspace.CurrentCamera
-			local dir = Vector3.zero
-
-			if uis:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
-			if uis:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
-			if uis:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
-			if uis:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
-
-			bv.Velocity = dir.Magnitude > 0 and dir.Unit * speed or Vector3.zero
-		end
-	end)
-
-	-- MAGNET ORIGINAL (SEM ALTERAR)
-	local magnetOn=false
-	local radius=50
-	local fixed={}
-	local welds={}
-
-	local params=OverlapParams.new()
-	params.FilterType=Enum.RaycastFilterType.Blacklist
-	params.FilterDescendantsInstances={plr.Character}
-
-	createButton("Magnet", function()
-		magnetOn = not magnetOn
-		if not magnetOn then
-			for _,w in pairs(welds) do
-				if w then w:Destroy() end
-			end
-			table.clear(fixed)
-			table.clear(welds)
-		end
-	end)
-
-	run.Heartbeat:Connect(function()
-		if not magnetOn then return end
-		local parts = workspace:GetPartBoundsInRadius(plr.Character.HumanoidRootPart.Position, radius, params)
-
-		for _,obj in pairs(parts) do
-			if obj.Name=="TranspBox" and not obj.Anchored and not fixed[obj] then
-				local dir=(plr.Character.HumanoidRootPart.Position-obj.Position).Unit
-				obj.AssemblyLinearVelocity=dir*45
-
-				if (obj.Position-plr.Character.HumanoidRootPart.Position).Magnitude < 4 then
-					local weld=Instance.new("WeldConstraint",obj)
-					weld.Part0=plr.Character.HumanoidRootPart
-					weld.Part1=obj
-					fixed[obj]=true
-					welds[obj]=weld
-				end
-			end
-		end
-	end)
-
-	-- NOCLIP
-	local noclip=false
-	createButton("Noclip", function()
-		noclip = not noclip
-	end)
-
-	run.Stepped:Connect(function()
-		if noclip then
-			for _,v in pairs(plr.Character:GetDescendants()) do
-				if v:IsA("BasePart") then
-					v.CanCollide=false
-				end
-			end
-		end
-	end)
+--// BUTTON CREATOR
+local function createBtn(text,pos,callback)
+	local b = Instance.new("TextButton", main)
+	b.Size = UDim2.new(0.8,0,0,30)
+	b.Position = UDim2.new(0.1,0,0,pos)
+	b.Text = text
+	b.MouseButton1Click:Connect(callback)
 end
 
--- ================= BOTÃO =================
-btn.MouseButton1Click:Connect(function()
-	local key = box.Text
-	local data = getKeys()
+--// SPEED INPUTS (SEM BUG)
+local walkBox = Instance.new("TextBox", main)
+walkBox.Size = UDim2.new(0.8,0,0,30)
+walkBox.Position = UDim2.new(0.1,0,0,40)
+walkBox.PlaceholderText = "WalkSpeed"
+walkBox.ClearTextOnFocus = false
 
-	if checkKey(key, data) then
-		status.Text = "Key válida ✅"
-		status.TextColor3 = Color3.fromRGB(0,255,0)
-		saveKey(key)
-		task.wait(1)
-		loadHub()
-	else
-		status.Text = "Key inválida ❌"
-		status.TextColor3 = Color3.fromRGB(255,0,0)
+walkBox.FocusLost:Connect(function()
+	local num = tonumber(walkBox.Text)
+	if num then
+		walkSpeed = num
+		humanoid.WalkSpeed = walkSpeed
+	end
+	walkBox.Text = ""
+end)
+
+local flyBox = Instance.new("TextBox", main)
+flyBox.Size = UDim2.new(0.8,0,0,30)
+flyBox.Position = UDim2.new(0.1,0,0,80)
+flyBox.PlaceholderText = "FlySpeed"
+flyBox.ClearTextOnFocus = false
+
+flyBox.FocusLost:Connect(function()
+	local num = tonumber(flyBox.Text)
+	if num then
+		flySpeed = num
+	end
+	flyBox.Text = ""
+end)
+
+--// FLY
+local bv, bg
+
+local function startFly()
+	flying = true
+	bv = Instance.new("BodyVelocity", hrp)
+	bv.MaxForce = Vector3.new(1e5,1e5,1e5)
+
+	bg = Instance.new("BodyGyro", hrp)
+	bg.MaxTorque = Vector3.new(1e5,1e5,1e5)
+end
+
+local function stopFly()
+	flying = false
+	if bv then bv:Destroy() end
+	if bg then bg:Destroy() end
+end
+
+createBtn("Fly",120,function()
+	if flying then stopFly() else startFly() end
+end)
+
+RunService.RenderStepped:Connect(function()
+	if flying and bv and bg then
+		local cam = workspace.CurrentCamera
+		local dir = Vector3.zero
+
+		if UIS:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
+		if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
+		if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
+		if UIS:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
+
+		if dir.Magnitude > 0 then
+			bv.Velocity = dir.Unit * flySpeed
+		else
+			bv.Velocity = Vector3.zero
+		end
+
+		bg.CFrame = cam.CFrame
 	end
 end)
 
--- AUTO LOGIN
-local saved = loadKey()
-if saved then
-	local data = getKeys()
-	if checkKey(saved, data) then
-		loadHub()
+--// NOCLIP
+createBtn("Noclip",160,function()
+	noclip = not noclip
+end)
+
+RunService.Stepped:Connect(function()
+	if noclip then
+		for _,v in pairs(character:GetDescendants()) do
+			if v:IsA("BasePart") then
+				v.CanCollide = false
+			end
+		end
 	end
-end
+end)
+
+--// MAGNET (EXATAMENTE O SEU)
+local radius = 50
+local fixed = {}
+local welds = {}
+
+local overlapParams = OverlapParams.new()
+overlapParams.FilterType = Enum.RaycastFilterType.Blacklist
+overlapParams.FilterDescendantsInstances = {character}
+
+createBtn("Magnet",200,function()
+	magnetOn = not magnetOn
+
+	if not magnetOn then
+		for obj, weld in pairs(welds) do
+			if weld then weld:Destroy() end
+		end
+		table.clear(fixed)
+		table.clear(welds)
+	end
+end)
+
+RunService.Heartbeat:Connect(function()
+	if not magnetOn then return end
+
+	local parts = workspace:GetPartBoundsInRadius(hrp.Position, radius, overlapParams)
+
+	for _, obj in pairs(parts) do
+		if obj.Name == "TranspBox" and not obj.Anchored and not fixed[obj] then
+
+			local distance = (obj.Position - hrp.Position).Magnitude
+			local direction = (hrp.Position - obj.Position).Unit
+
+			obj.AssemblyLinearVelocity = direction * 45
+
+			if distance < 4 then
+				obj.AssemblyLinearVelocity = Vector3.zero
+
+				local weld = Instance.new("WeldConstraint")
+				weld.Part0 = hrp
+				weld.Part1 = obj
+				weld.Parent = obj
+
+				fixed[obj] = true
+				welds[obj] = weld
+			end
+		end
+	end
+end)
