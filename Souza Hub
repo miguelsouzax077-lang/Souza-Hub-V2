@@ -114,7 +114,9 @@ end)
 -- AUTO LOGIN
 local saved = loadKey()
 if saved and checkKey(saved) then
-	loadHub(-- SERVICES
+	loadHub()
+end
+-- SERVICES
 local plr = game.Players.LocalPlayer
 local uis = game:GetService("UserInputService")
 local run = game:GetService("RunService")
@@ -351,5 +353,4 @@ run.Stepped:Connect(function()
 			end
 		end
 	end
-end))
-end
+end)
