@@ -1,49 +1,16 @@
--- ================= CONFIG =================
-local KEY_URL = "https://pastebin.com/raw/u07LPtaT" -- ex: raw github
+-- CONFIG
+local validKeys = {
+	["SOUZA-123"] = true,
+	["VIP-999"] = true,
+	["PREMIUM-777"] = true
+}
 
 local saveFile = "souza_key.txt"
 
--- ================= SERVICES =================
+-- SERVICES
 local plr = game.Players.LocalPlayer
-local uis = game:GetService("UserInputService")
-local run = game:GetService("RunService")
 
--- ================= FUNÇÕES KEY =================
-local function getKeys()
-	local success, result = pcall(function()
-		return game:HttpGet(KEY_URL)
-	end)
-	
-	if success then
-		return result
-	end
-	
-	return ""
-end
-
-local function checkKey(key, data)
-	for line in string.gmatch(data, "[^\r\n]+") do
-		if line == key then
-			return true
-		end
-	end
-	return false
-end
-
-local function saveKey(key)
-	if writefile then
-		writefile(saveFile, key)
-	end
-end
-
-local function loadKey()
-	if readfile and isfile and isfile(saveFile) then
-		return readfile(saveFile)
-	end
-	return nil
-end
-
--- ================= GUI KEY =================
+-- GUI
 local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.Name = "SouzaKeySystem"
 
@@ -54,6 +21,7 @@ frame.BackgroundColor3 = Color3.fromRGB(15,15,15)
 frame.Active = true
 frame.Draggable = true
 
+-- TITLE RGB
 local title = Instance.new("TextLabel", frame)
 title.Size = UDim2.new(1,0,0,40)
 title.BackgroundTransparency = 1
@@ -70,202 +38,70 @@ task.spawn(function()
 	end
 end)
 
-local box = Instance.new("", frame)
+-- INPUT
+local box = Instance.new("TextBox", frame)
 box.Size = UDim2.new(1,-20,0,40)
 box.Position = UDim2.new(0,10,0,60)
 box.PlaceholderText = "Digite sua key..."
+box.Text = ""
 box.BackgroundColor3 = Color3.fromRGB(25,25,25)
 box.TextColor3 = Color3.new(1,1,1)
+box.Font = Enum.Font.Gotham
 
+-- STATUS
 local status = Instance.new("TextLabel", frame)
 status.Size = UDim2.new(1,0,0,20)
 status.Position = UDim2.new(0,0,0,105)
 status.BackgroundTransparency = 1
+status.Text = ""
+status.TextColor3 = Color3.new(1,1,1)
 status.Font = Enum.Font.Gotham
 
+-- BUTTON
 local btn = Instance.new("TextButton", frame)
 btn.Size = UDim2.new(1,-20,0,40)
 btn.Position = UDim2.new(0,10,0,130)
 btn.Text = "Validar Key"
 btn.BackgroundColor3 = Color3.fromRGB(30,30,30)
 btn.TextColor3 = Color3.new(1,1,1)
+btn.Font = Enum.Font.GothamBold
 
--- ================= HUB =================
-local function loadHub()
-	gui:Destroy()
-
-	-- ================= HUB GUI =================
-	local gui = Instance.new("ScreenGui", game.CoreGui)
-	local main = Instance.new("Frame", gui)
-	main.Size = UDim2.new(0,250,0,330)
-	main.Position = UDim2.new(0.35,0,0.25,0)
-	main.BackgroundColor3 = Color3.fromRGB(15,15,15)
-	main.Active = true
-	main.Draggable = true
-
-	local title = Instance.new("TextLabel", main)
-	title.Size = UDim2.new(1,0,0,30)
-	title.BackgroundTransparency = 1
-	title.Text = "🔥 Souza Premium"
-	title.Font = Enum.Font.GothamBold
-	title.TextSize = 18
-
-	-- RGB TITLE
-	task.spawn(function()
-		while true do
-			for i=0,1,0.01 do
-				title.TextColor3 = Color3.fromHSV(i,1,1)
-				task.wait()
-			end
-		end
-	end)
-
-	local scroll = Instance.new("ScrollingFrame", main)
-	scroll.Size = UDim2.new(1,0,1,-30)
-	scroll.Position = UDim2.new(0,0,0,30)
-	scroll.CanvasSize = UDim2.new(0,0,0,600)
-	scroll.BackgroundTransparency = 1
-
-	local layout = Instance.new("UIListLayout", scroll)
-	layout.Padding = UDim.new(0,6)
-
-	local function createButton(text, func)
-		local btn = Instance.new("TextButton", scroll)
-		btn.Size = UDim2.new(1,-10,0,35)
-		btn.BackgroundColor3 = Color3.fromRGB(30,30,30)
-		btn.TextColor3 = Color3.new(1,1,1)
-		btn.Text = text
-		btn.MouseButton1Click:Connect(func)
-	end
-
-	local function createBox(ph)
-		local box = Instance.new("TextBox", scroll)
-		box.Size = UDim2.new(1,-10,0,35)
-		box.PlaceholderText = ph
-		box.BackgroundColor3 = Color3.fromRGB(25,25,25)
-		box.TextColor3 = Color3.new(1,1,1)
-		return box
-	end
-
-	local walkBox = createBox("WalkSpeed")
-	local flyBox = createBox("FlySpeed")
-
-	-- WALK
-	createButton("Set WalkSpeed", function()
-		local v = tonumber(walkBox.Text)
-		if v then
-			plr.Character.Humanoid.WalkSpeed = v
-		end
-	end)
-
-	-- FLY
-	local flying=false
-	local bv,bg
-	local speed=50
-
-	createButton("Fly", function()
-		flying = not flying
-		local char = plr.Character
-		local hrp = char:WaitForChild("HumanoidRootPart")
-		local hum = char:WaitForChild("Humanoid")
-
-		if flying then
-			hum:ChangeState(Enum.HumanoidStateType.Physics)
-
-			bv = Instance.new("BodyVelocity", hrp)
-			bv.MaxForce = Vector3.new(1e5,1e5,1e5)
-
-			bg = Instance.new("BodyGyro", hrp)
-			bg.MaxTorque = Vector3.new(1e5,1e5,1e5)
-
-			local v = tonumber(flyBox.Text)
-			if v then speed = v end
-		else
-			if bv then bv:Destroy() end
-			if bg then bg:Destroy() end
-		end
-	end)
-
-	run.RenderStepped:Connect(function()
-		if flying and bv then
-			local cam = workspace.CurrentCamera
-			local dir = Vector3.zero
-
-			if uis:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
-			if uis:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
-			if uis:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
-			if uis:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
-
-			bv.Velocity = dir.Magnitude > 0 and dir.Unit * speed or Vector3.zero
-		end
-	end)
-
-	-- MAGNET ORIGINAL (SEM ALTERAR)
-	local magnetOn=false
-	local radius=50
-	local fixed={}
-	local welds={}
-
-	local params=OverlapParams.new()
-	params.FilterType=Enum.RaycastFilterType.Blacklist
-	params.FilterDescendantsInstances={plr.Character}
-
-	createButton("Magnet", function()
-		magnetOn = not magnetOn
-		if not magnetOn then
-			for _,w in pairs(welds) do
-				if w then w:Destroy() end
-			end
-			table.clear(fixed)
-			table.clear(welds)
-		end
-	end)
-
-	run.Heartbeat:Connect(function()
-		if not magnetOn then return end
-		local parts = workspace:GetPartBoundsInRadius(plr.Character.HumanoidRootPart.Position, radius, params)
-
-		for _,obj in pairs(parts) do
-			if obj.Name=="TranspBox" and not obj.Anchored and not fixed[obj] then
-				local dir=(plr.Character.HumanoidRootPart.Position-obj.Position).Unit
-				obj.AssemblyLinearVelocity=dir*45
-
-				if (obj.Position-plr.Character.HumanoidRootPart.Position).Magnitude < 4 then
-					local weld=Instance.new("WeldConstraint",obj)
-					weld.Part0=plr.Character.HumanoidRootPart
-					weld.Part1=obj
-					fixed[obj]=true
-					welds[obj]=weld
-				end
-			end
-		end
-	end)
-
-	-- NOCLIP
-	local noclip=false
-	createButton("Noclip", function()
-		noclip = not noclip
-	end)
-
-	run.Stepped:Connect(function()
-		if noclip then
-			for _,v in pairs(plr.Character:GetDescendants()) do
-				if v:IsA("BasePart") then
-					v.CanCollide=false
-				end
-			end
-		end
-	end)
+-- FUNÇÃO
+local function checkKey(key)
+	return validKeys[key] == true
 end
 
--- ================= BOTÃO =================
+-- SALVAR KEY
+local function saveKey(key)
+	if writefile then
+		writefile(saveFile, key)
+	end
+end
+
+-- CARREGAR KEY
+local function loadKey()
+	if readfile and isfile and isfile(saveFile) then
+		return readfile(saveFile)
+	end
+	return nil
+end
+
+-- LIBERAR HUB
+local function loadHub()
+	gui:Destroy()
+	
+	-- 🔥 AQUI VOCÊ COLOCA SEU SCRIPT DO HUB
+	print("Souza Hub liberado 😈")
+end
+
+-- BOTÃO
 btn.MouseButton1Click:Connect(function()
 	local key = box.Text
-	local data = getKeys()
-
-	if checkKey(key, data) then
+	
+	if checkKey(key) then
 		status.Text = "Key válida ✅"
 		status.TextColor3 = Color3.fromRGB(0,255,0)
+		
 		saveKey(key)
 		task.wait(1)
 		loadHub()
@@ -277,9 +113,6 @@ end)
 
 -- AUTO LOGIN
 local saved = loadKey()
-if saved then
-	local data = getKeys()
-	if checkKey(saved, data) then
-		loadHub()
-	end
+if saved and checkKey(saved) then
+	loadHub()
 end
