@@ -1,118 +1,29 @@
--- CONFIG
-local validKeys = {
-	["SOUZA-123"] = true,
-	["VIP-999"] = true,
-	["PREMIUM-777"] = true
-}
-
-local saveFile = "souza_key.txt"
-
--- SERVICES
-local plr = game.Players.LocalPlayer
-
--- GUI
-local gui = Instance.new("ScreenGui", game.CoreGui)
-gui.Name = "SouzaKeySystem"
-
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0,300,0,180)
-frame.Position = UDim2.new(0.4,0,0.35,0)
-frame.BackgroundColor3 = Color3.fromRGB(15,15,15)
-frame.Active = true
-frame.Draggable = true
-
--- TITLE RGB
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1,0,0,40)
-title.BackgroundTransparency = 1
-title.Text = "🔐 Souza Premium"
-title.Font = Enum.Font.GothamBold
-title.TextSize = 20
+-- ================= RGB BORDA =================
+local stroke = Instance.new("UIStroke", main)
+stroke.Thickness = 2
 
 task.spawn(function()
 	while true do
-		for i=0,1,0.01 do
-			title.TextColor3 = Color3.fromHSV(i,1,1)
+		for i = 0,1,0.01 do
+			stroke.Color = Color3.fromHSV(i,1,1)
 			task.wait()
 		end
 	end
 end)
 
--- INPUT
-local box = Instance.new("TextBox", frame)
-box.Size = UDim2.new(1,-20,0,40)
-box.Position = UDim2.new(0,10,0,60)
-box.PlaceholderText = "Digite sua key..."
-box.Text = ""
-box.BackgroundColor3 = Color3.fromRGB(25,25,25)
-box.TextColor3 = Color3.new(1,1,1)
-box.Font = Enum.Font.Gotham
+-- ================= NOCLIP =================
+local noclip = false
 
--- STATUS
-local status = Instance.new("TextLabel", frame)
-status.Size = UDim2.new(1,0,0,20)
-status.Position = UDim2.new(0,0,0,105)
-status.BackgroundTransparency = 1
-status.Text = ""
-status.TextColor3 = Color3.new(1,1,1)
-status.Font = Enum.Font.Gotham
-
--- BUTTON
-local btn = Instance.new("TextButton", frame)
-btn.Size = UDim2.new(1,-20,0,40)
-btn.Position = UDim2.new(0,10,0,130)
-btn.Text = "Validar Key"
-btn.BackgroundColor3 = Color3.fromRGB(30,30,30)
-btn.TextColor3 = Color3.new(1,1,1)
-btn.Font = Enum.Font.GothamBold
-
--- FUNÇÃO
-local function checkKey(key)
-	return validKeys[key] == true
-end
-
--- SALVAR KEY
-local function saveKey(key)
-	if writefile then
-		writefile(saveFile, key)
-	end
-end
-
--- CARREGAR KEY
-local function loadKey()
-	if readfile and isfile and isfile(saveFile) then
-		return readfile(saveFile)
-	end
-	return nil
-end
-
--- LIBERAR HUB
-local function loadHub()
-	gui:Destroy()
-	
-	-- 🔥 AQUI VOCÊ COLOCA SEU SCRIPT DO HUB
-	print("Souza Hub liberado 😈")
-end
-
--- BOTÃO
-btn.MouseButton1Click:Connect(function()
-	local key = box.Text
-	
-	if checkKey(key) then
-		status.Text = "Key válida ✅"
-		status.TextColor3 = Color3.fromRGB(0,255,0)
-		
-		saveKey(key)
-		task.wait(1)
-		loadHub()
-	else
-		status.Text = "Key inválida ❌"
-		status.TextColor3 = Color3.fromRGB(255,0,0)
-	end
+createButton("Noclip ON/OFF", function()
+	noclip = not noclip
 end)
 
--- AUTO LOGIN
-local saved = loadKey()
-if saved and checkKey(saved) then
-	loadHub()
-end
+run.Stepped:Connect(function()
+	if noclip then
+		for _, v in pairs(char:GetDescendants()) do
+			if v:IsA("BasePart") then
+				v.CanCollide = false
+			end
+		end
+	end
+end)
